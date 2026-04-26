@@ -41,8 +41,8 @@ def par_sim(target=100_000):
     r = process_map(_sim, seed_list, batch_sizes, max_workers=n_workers, chunksize=chunk_size)
 
     # save results
-    data = np.array([r, batch_sizes]).T
-    results = pd.DataFrame(data, columns=["regular", "N"])
+    data = np.array([r, seed_list, batch_sizes]).T
+    results = pd.DataFrame(data, columns=["regular", "seed", "N"])
 
     print(f"n regular:     {results["regular"].sum()}\nn simulations: {results["N"].sum()}")
     print(f"saving...")
