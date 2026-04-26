@@ -4,4 +4,4 @@ To install necessary packages:
 
 To run a simulation:
 
-`py sim.py`
+`py fast_sim.py`

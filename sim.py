@@ -1,7 +1,5 @@
 import numpy as np
 import pandas as pd
-import time
-from tqdm import tqdm
 from utils import sample_points_on_sphere
 from octahedral import is_octahedral
 from multiprocessing import Pool
@@ -22,7 +20,7 @@ def sim(seed, N, save_edges=False, save_points=False):
     edge_list = np.empty((N, len(edge_names)), dtype=object) if save_edges else None
 
     for i in range(N):
-        xyz = sample_points_on_sphere()
+        xyz = sample_points_on_sphere(rng)
 
         # TODO: change type ignore -> more pythonic
         results[i], edges = is_octahedral(xyz) # type: ignore
@@ -31,7 +29,6 @@ def sim(seed, N, save_edges=False, save_points=False):
         if save_points: XYZ[i, :] = xyz.reshape(1, -1) # type: ignore
 
     results = pd.DataFrame(data=np.hstack([results, edge_list]) if save_edges else results, columns=["regular", *(edge_names if save_edges else [])])
-
     return results, XYZ
 
 
