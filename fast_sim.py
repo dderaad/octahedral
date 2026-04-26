@@ -1,13 +1,15 @@
 from tqdm.contrib.concurrent import process_map
 from utils import sample_points_on_sphere
-from octahedral import is_octahedral
+from octahedral import convex_hull_octahedron_test
 import numpy as np
 import pandas as pd
 import time, datetime
 import os
 
+
 PATH = r"data"
 TEMP_PATH = r"data\temp"
+
 
 def _sim(seed, N):
     rng = np.random.default_rng(seed)
@@ -15,8 +17,8 @@ def _sim(seed, N):
 
     for _ in range(N):
         xyz = sample_points_on_sphere(rng)
-        regular, _ = is_octahedral(xyz) # type: ignore
-        results += int(regular)
+        regular = convex_hull_octahedron_test(xyz) # type: ignore
+        results += regular
 
     return results
 
@@ -45,10 +47,11 @@ def par_sim(target=100_000):
     results = pd.DataFrame(data, columns=["regular", "seed", "N"])
 
     print(f"n regular:     {results["regular"].sum()}\nn simulations: {results["N"].sum()}")
+    p = results["regular"].sum() / results["N"].sum()
+    print(f"{p=}")
     print(f"saving...")
     results.to_pickle(fr"{PATH}\results_{seed:04}_{time.time_ns()}.pkl")
     
 
-
 if __name__ == "__main__":
-    par_sim()
+    par_sim(50_000_000)
