@@ -15,12 +15,13 @@ def process_data():
         r = pd.read_pickle(rf"{PATH}/{f}")
         datasets.append(r)
 
-    mass = pd.concat(datasets)
+    mass = pd.concat(datasets).reset_index(drop=True)
     
     viliam_data = (1139883093, 3_000_000_000)
+    mass.loc[len(mass)] = (viliam_data[0], -1, viliam_data[1])
     #viliam_data = (0, 0)
 
-    successes, trials = np.sum(mass["regular"]) + viliam_data[0], np.sum(mass["N"]) + viliam_data[1]
+    successes, trials = np.sum(mass["regular"]), np.sum(mass["N"])
     p = successes / trials
     print(f"{successes=:,}\n{trials=:,}")
 
