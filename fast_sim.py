@@ -27,7 +27,7 @@ def par_sim(target=100_000):
     seed = (time.time_ns() // 100) % MAX_INT32
 
     # Parallel Parameters:
-    n_workers = os.cpu_count()
+    n_workers = (os.cpu_count() * 3) // 4 
     batch_size = 10_000
     chunk_size = 1
     n_jobs = np.max([np.ceil(target / batch_size), 1]).astype(int)  # type: ignore
