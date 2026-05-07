@@ -44,7 +44,7 @@ def process_data():
 
     print(f"statsmodels.stats.proportion.proportion_confint: {sm_CI}")
     print(f"scipy.stats.binomtest: ({alpha=})              ({scp_CI["low"]}, {scp_CI["high"]})")
-    print(f"width: {width/2:.16E}")
+    print(f"CI Width: {width:.16E}")
     print(f"Standard Error: {np.sqrt(p * (1 - p) / trials)}")
 
     str_point_estimate = str(float(p))

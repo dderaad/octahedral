@@ -1,5 +1,7 @@
 import torch
-
+import utils
+import time
+import pandas as pd
 
 def make_hull_constants(device):
     # All C(6, 3) candidate triangular faces
@@ -128,52 +130,65 @@ def convex_hull_octahedron_test_gpu(points, eps=1e-9, constants=None):
     return ok
 
 def gpu_sim(N, device, rng=torch.Generator(), verbose=False):
+    # generate N collections of 6 points (octahedra) on the unit sphere (R^3)
     points_batch = torch.randn(N, 6, 3, generator=rng, device=device, dtype=torch.float64)
     points_batch_norm = points_batch / torch.norm(points_batch, 2, dim=2, keepdim=True)
 
     constants = make_hull_constants(device)
-    ok_batch = convex_hull_octahedron_test_gpu(points_batch_norm, constants=constants)
+    with torch.inference_mode():
+        ok_batch = convex_hull_octahedron_test_gpu(points_batch_norm, constants=constants)
 
     x = ok_batch.sum().item()
 
     if verbose: print(f'successes: {x:,}\ntrials:  {N:,}\np:       {x / N}')
     return x
 
-if __name__ == "__main__":
+
+def main(target=10_000_000_000, reset_temp=78, max_temp=85, verbose=True):
     device = "cuda"
 
     rng = torch.Generator(device=device)
     seed = rng.seed()
     print(f"{seed=}")
 
-    import pandas as pd
     PATH = r"data"
-    N = 1_250_000
+    N = 500_000
     s = 0
-    every = 25
+    every = 100
     data = []
-    target = 10_000_000_000
 
-    import time
     start = time.time()
+    wait = 0
 
-    for i, sims in enumerate(range(N, target, N), 1):
+    batches = range(0, target, N)
+    first = True
+    for i, sims in enumerate(batches):
         x = gpu_sim(N, device=device, rng=rng)
         s += x
         data.append(x)
+        
+        temp = utils.check_temp()
+        if temp >= max_temp:
+            # Cool off
+            while utils.check_temp() >= reset_temp:
+                time.sleep(wait_time:=0.25)
+                wait += wait_time
 
-        if i % every == 0 or i >= target // N:
+        if not first and i % every == 0 or i == (len(batches) - 1):
             pd.DataFrame(
                 {"regular": data, 
                  "seed": -1,
                  "N": N
                  }
                  ).to_pickle(f'{PATH}\\gpu_results_{seed}')
-            print(f'{sims=:,}, p: {s / sims}')
+            print(f'{i: 9}: {sims=: 16,}, p: {s / sims:.080}, temp: {temp:03}*C, wait: {wait}')
             data = []
             seed = rng.seed()
-            
+        else:
+            first = False
 
-    print(f"Target reached in {time.time() - start} seconds.")
-        
+    print(f"Target reached in {time.time() - start} seconds.\nWaited a total of {wait} seconds to prevent overheating.")
 
+
+if __name__ == "__main__":
+    main(10_000_000_000)

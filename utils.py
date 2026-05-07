@@ -1,4 +1,5 @@
 import numpy as np
+import pynvml
 
 def sample_points_on_sphere(rng: np.random.Generator, n=6):
     x = rng.normal(size=(n, 3))
@@ -15,3 +16,15 @@ def first_n_digits(s1, s2):
         return i
     else:
         return 0
+
+def check_temp():
+    pynvml.nvmlInit()
+
+    handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+
+    temp_c = pynvml.nvmlDeviceGetTemperature(
+        handle,
+        pynvml.NVML_TEMPERATURE_GPU,
+    )
+
+    return temp_c
